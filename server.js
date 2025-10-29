@@ -1,9 +1,16 @@
 require('dotenv').config();
 const express = require('express');
 const { sequelize } = require('./models');
+const logger = require('./utils/logger');
+const morgan = require('morgan');
 
-// Import routes
+// Install morgan for HTTP logging
+// npm install morgan
+
+// Import routes and middleware
 const countryRoutes = require('./routes/countryRoutes');
+const { errorHandler } = require('./middleware/error.middleware');
+const { validateCountryQuery } = require('./middleware/validation.middleware');
 
 const app = express();
 const PORT = process.env.PORT || 3010;
@@ -12,8 +19,12 @@ const PORT = process.env.PORT || 3010;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// HTTP request logging
+app.use(morgan('combined', { stream: logger.stream }));
+
 // Health check endpoint
 app.get('/health', (req, res) => {
+  logger.info('Health check requested');
   res.status(200).json({ 
     status: 'OK', 
     message: 'Server is running',
@@ -25,12 +36,14 @@ app.get('/health', (req, res) => {
 app.get('/health/db', async (req, res) => {
   try {
     await sequelize.authenticate();
+    logger.info('Database health check passed');
     res.status(200).json({ 
       status: 'OK', 
       message: 'Database connection healthy',
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    logger.error('Database health check failed:', error.message);
     res.status(503).json({ 
       status: 'ERROR', 
       message: 'Database connection failed',
@@ -39,78 +52,63 @@ app.get('/health/db', async (req, res) => {
   }
 });
 
-// API Routes
-app.use('/countries', countryRoutes);
+// API Routes with validation middleware
+app.use('/countries', validateCountryQuery, countryRoutes);
 
-// Root endpoint - UPDATED WITH COMPLETE DOCUMENTATION
+// Root endpoint
 app.get('/', (req, res) => {
+  logger.info('Root endpoint accessed');
   res.json({
     message: 'GlobalExchangeAPI - Server is running!',
     version: '1.0.0',
     endpoints: {
-      'GET /health': 'Server health check',
-      'GET /health/db': 'Database connection health check',
-      'POST /countries/refresh': 'Fetch and update all country data from external APIs',
-      'GET /countries': 'Get all countries with filtering and sorting',
+      '/health': 'Health check',
+      '/health/db': 'Database health check',
+      'POST /countries/refresh': 'Refresh country data from external APIs',
+      'GET /countries': 'Get all countries (supports ?region, ?currency, ?sort)',
       'GET /countries/:name': 'Get specific country by name',
-      'DELETE /countries/:name': 'Delete country by name', 
-      'GET /countries/status': 'Get API statistics and last refresh timestamp'
+      'DELETE /countries/:name': 'Delete country by name',
+      'GET /countries/status': 'Get API status and statistics'
     },
     query_parameters: {
-      'GET /countries': {
-        'region': 'Filter by region (e.g., Africa, Europe, Asia)',
-        'currency': 'Filter by currency code (e.g., USD, EUR, NGN)',
-        'sort': 'Sort results: gdp_desc, gdp_asc, population_desc, population_asc, name_asc, name_desc'
-      }
-    },
-    examples: {
-      'Filter African countries': '/countries?region=Africa',
-      'Sort by GDP descending': '/countries?sort=gdp_desc',
-      'European countries with EUR': '/countries?region=Europe&currency=EUR',
-      'Get specific country': '/countries/Nigeria',
-      'API status': '/countries/status'
+      'region': 'Filter by region (e.g., Africa, Europe)',
+      'currency': 'Filter by currency code (e.g., USD, EUR)',
+      'sort': 'Sort by: gdp_desc, gdp_asc, population_desc, population_asc, name_asc, name_desc'
     }
   });
 });
 
 // 404 handler for undefined routes
-app.use((req, res) => {
+app.use('*', (req, res) => {
+  logger.warn(`404 - Endpoint not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({
     error: 'Endpoint not found',
     path: req.originalUrl,
     method: req.method,
-    available_endpoints: {
-      'GET /': 'This documentation',
-      'GET /health': 'Server health check', 
-      'GET /health/db': 'Database health check',
-      'POST /countries/refresh': 'Refresh country data',
-      'GET /countries': 'Get countries with filters',
-      'GET /countries/:name': 'Get specific country',
-      'DELETE /countries/:name': 'Delete country',
-      'GET /countries/status': 'Get API status'
-    }
   });
 });
+
+// Error handling middleware (MUST be last)
+app.use(errorHandler);
 
 // Start server with database sync
 const startServer = async () => {
   try {
     await sequelize.authenticate();
-    console.log('✅ Database connection established successfully');
+    logger.info('Database connection established successfully');
 
     if (process.env.NODE_ENV === 'development') {
       await sequelize.sync({ force: false });
-      console.log('✅ Database tables synchronized');
+      logger.info('Database tables synchronized');
     }
 
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📍 Health check: http://localhost:${PORT}/health`);
-      console.log(`📍 API Documentation: http://localhost:${PORT}/`);
-      console.log(`📍 API Base: http://localhost:${PORT}/countries`);
+      logger.info(`Server running on port ${PORT}`);
+      logger.info(`Health check: http://localhost:${PORT}/health`);
+      logger.info(`API Base: http://localhost:${PORT}/countries`);
     });
   } catch (error) {
-    console.error('❌ Unable to start server:', error);
+    logger.error('Unable to start server:', error);
     process.exit(1);
   }
 };
