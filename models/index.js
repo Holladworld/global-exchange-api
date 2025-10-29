@@ -1,11 +1,23 @@
 const { sequelize } = require('../config/database');
 const Country = require('./country');
 
-const db = {
-  sequelize,
+// Initialize models
+const models = {
   Country,
 };
 
-// Future model associations will go here
+// Sync all models with database
+const syncModels = async () => {
+  try {
+    await sequelize.sync({ alter: true });
+    console.log('✅ Database models synchronized');
+  } catch (error) {
+    console.error('❌ Failed to sync database models:', error);
+  }
+};
 
-module.exports = db;
+module.exports = {
+  sequelize,
+  ...models,
+  syncModels,
+};
