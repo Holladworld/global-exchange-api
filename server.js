@@ -1,5 +1,8 @@
 require('dotenv').config();
 const express = require('express');
+const helmet = require('helmet');
+const compression = require('compression');
+const cors = require('cors')
 const { sequelize } = require('./models');
 const logger = require('./utils/logger');
 const morgan = require('morgan');
@@ -15,9 +18,25 @@ const { validateCountryQuery } = require('./middleware/validation.middleware');
 const app = express();
 const PORT = process.env.PORT || 3010;
 
+// Security middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+//CORS configuration
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:3000'],
+  methods: ['GET', 'POST', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+
+// Performance middleware
+app.use(compression());
+
 // Basic middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // HTTP request logging
 app.use(morgan('combined', { stream: logger.stream }));
