@@ -7,9 +7,7 @@ const router = express.Router();
 router.post('/refresh', countryController.refreshCountries);
 router.get('/', countryController.getCountries);
 router.get('/status', countryController.getCountryStatus);
-
-// We'll add more routes here later
-// router.get('/:name', countryController.getCountryByName);
-// router.delete('/:name', countryController.deleteCountry);
+router.get('/:name', countryController.getCountryByName);
+router.delete('/:name', countryController.deleteCountry);
 
 module.exports = router;
