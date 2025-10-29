@@ -1,0 +1,12 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "npm start"
+restartPolicyType = "ON_FAILURE"
+
+# Health check configuration
+[healthcheck]
+path = "/health"
+port = 3010
+timeout = 30
