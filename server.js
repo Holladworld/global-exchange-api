@@ -16,7 +16,7 @@ const { validateCountryQuery } = require('./middleware/validation.middleware');
 const { productionSecurity, productionErrorHandler } = require('./middleware/production.middleware');
 
 const app = express();
-const PORT = process.env.PORT || 3010;
+const PORT = process.env.PORT || 8080;
 
 // Middleware setup
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));

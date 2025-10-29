@@ -1,17 +1,21 @@
+// config/database.js - UPDATED
 const { Sequelize } = require('sequelize');
 
-// Use Railway's environment variables
+// Use Railway's environment variables - CORRECTED
 const dbConfig = {
   database: process.env.MYSQLDATABASE || 'railway',
   username: process.env.MYSQLUSER || 'root',
   password: process.env.MYSQLPASSWORD || '',
   host: process.env.MYSQLHOST || 'containers-us-west-146.railway.app',
-  port: process.env.MYSQLPORT || 3306,
+  port: process.env.MYSQLPORT || 7259, // Use the actual Railway port
+  dialect: 'mysql'
 };
 
 console.log('🔧 Database Config:', {
   host: dbConfig.host,
-  database: dbConfig.database
+  port: dbConfig.port,
+  database: dbConfig.database,
+  username: dbConfig.username ? '***' : 'missing' // Don't log password
 });
 
 const sequelize = new Sequelize(
@@ -22,19 +26,16 @@ const sequelize = new Sequelize(
     host: dbConfig.host,
     port: dbConfig.port,
     dialect: 'mysql',
-    logging: false,
+    logging: console.log, // Enable to see SQL queries
+    retry: {
+      max: 5,
+      timeout: 60000
+    },
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    }
   }
 );
-
-const testConnection = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('✅ Database connected to Railway MySQL');
-    return true;
-  } catch (error) {
-    console.log('⚠️ Database connection failed:', error.message);
-    return false;
-  }
-};
-
-module.exports = { sequelize, testConnection };
