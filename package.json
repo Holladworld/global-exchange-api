@@ -8,7 +8,8 @@
     "dev": "nodemon server.js",
     "test:server": "node -e \"require('dotenv').config(); const app = require('./server'); console.log('✅ Server module loads correctly')\"",
     "test:db": "node scripts/test-db.js",
-    "test:model": "node scripts/test-model.js"
+    "test:model": "node scripts/test-model.js",
+    "test:apis": "node scripts/test-apis.js"
   },
   "keywords": [],
   "author": "",
