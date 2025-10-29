@@ -1,6 +1,9 @@
 require('dotenv').config();
 const express = require('express');
-const { sequelize } = require('./models'); // Updated import
+const { sequelize } = require('./models');
+
+// Import routes
+const countryRoutes = require('./routes/countryRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3010;
@@ -18,7 +21,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Database check endpoint
+// Database health check
 app.get('/health/db', async (req, res) => {
   try {
     await sequelize.authenticate();
@@ -36,6 +39,9 @@ app.get('/health/db', async (req, res) => {
   }
 });
 
+// API Routes
+app.use('/countries', countryRoutes);
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
@@ -43,28 +49,38 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       '/health': 'Health check',
-      '/health/db': 'Database health check'
+      '/health/db': 'Database health check',
+      '/countries/refresh': 'Refresh country data (POST)',
+      '/countries': 'Get all countries (GET)',
+      '/countries/status': 'Get API status (GET)'
     }
+  });
+});
+
+// 404 handler for undefined routes
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Endpoint not found',
+    path: req.originalUrl,
+    method: req.method,
   });
 });
 
 // Start server with database sync
 const startServer = async () => {
   try {
-    // Test database connection
     await sequelize.authenticate();
     console.log('✅ Database connection established successfully');
 
-    // Sync database models (creates tables)
     if (process.env.NODE_ENV === 'development') {
-      await sequelize.sync({ force: false }); // force: true would drop tables - DANGEROUS!
+      await sequelize.sync({ force: false });
       console.log('✅ Database tables synchronized');
     }
 
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📍 Health check: http://localhost:${PORT}/health`);
-      console.log(`📍 DB Health check: http://localhost:${PORT}/health/db`);
+      console.log(`📍 API Base: http://localhost:${PORT}/countries`);
     });
   } catch (error) {
     console.error('❌ Unable to start server:', error);
