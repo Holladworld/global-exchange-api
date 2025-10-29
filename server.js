@@ -42,27 +42,53 @@ app.get('/health/db', async (req, res) => {
 // API Routes
 app.use('/countries', countryRoutes);
 
-// Root endpoint
+// Root endpoint - UPDATED WITH COMPLETE DOCUMENTATION
 app.get('/', (req, res) => {
   res.json({
     message: 'GlobalExchangeAPI - Server is running!',
     version: '1.0.0',
     endpoints: {
-      '/health': 'Health check',
-      '/health/db': 'Database health check',
-      '/countries/refresh': 'Refresh country data (POST)',
-      '/countries': 'Get all countries (GET)',
-      '/countries/status': 'Get API status (GET)'
+      'GET /health': 'Server health check',
+      'GET /health/db': 'Database connection health check',
+      'POST /countries/refresh': 'Fetch and update all country data from external APIs',
+      'GET /countries': 'Get all countries with filtering and sorting',
+      'GET /countries/:name': 'Get specific country by name',
+      'DELETE /countries/:name': 'Delete country by name', 
+      'GET /countries/status': 'Get API statistics and last refresh timestamp'
+    },
+    query_parameters: {
+      'GET /countries': {
+        'region': 'Filter by region (e.g., Africa, Europe, Asia)',
+        'currency': 'Filter by currency code (e.g., USD, EUR, NGN)',
+        'sort': 'Sort results: gdp_desc, gdp_asc, population_desc, population_asc, name_asc, name_desc'
+      }
+    },
+    examples: {
+      'Filter African countries': '/countries?region=Africa',
+      'Sort by GDP descending': '/countries?sort=gdp_desc',
+      'European countries with EUR': '/countries?region=Europe&currency=EUR',
+      'Get specific country': '/countries/Nigeria',
+      'API status': '/countries/status'
     }
   });
 });
 
 // 404 handler for undefined routes
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     error: 'Endpoint not found',
     path: req.originalUrl,
     method: req.method,
+    available_endpoints: {
+      'GET /': 'This documentation',
+      'GET /health': 'Server health check', 
+      'GET /health/db': 'Database health check',
+      'POST /countries/refresh': 'Refresh country data',
+      'GET /countries': 'Get countries with filters',
+      'GET /countries/:name': 'Get specific country',
+      'DELETE /countries/:name': 'Delete country',
+      'GET /countries/status': 'Get API status'
+    }
   });
 });
 
@@ -80,6 +106,7 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📍 Health check: http://localhost:${PORT}/health`);
+      console.log(`📍 API Documentation: http://localhost:${PORT}/`);
       console.log(`📍 API Base: http://localhost:${PORT}/countries`);
     });
   } catch (error) {
