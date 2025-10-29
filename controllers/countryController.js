@@ -1,8 +1,7 @@
 const dataProcessingService = require('../services/dataProcessingService');
 const Country = require('../models/country');
 const { Op } = require('sequelize');
-  const imageService = require('../services/imageService');
-  
+const imageService = require('../services/imageService');
 
 class CountryController {
   async refreshCountries(req, res) {
@@ -38,12 +37,12 @@ class CountryController {
       
       console.log(`🔍 GET /countries query:`, { region, currency, sort });
       
-      // Build where clause for filtering
+      // Build where clause for filtering - FIXED FOR MySQL
       const whereClause = {};
       
       if (region) {
         whereClause.region = {
-          [Op.iLike]: `%${region}%` // Case-insensitive search for PostgreSQL
+          [Op.like]: `%${region}%` // ✅ FIXED: Changed iLike to like for MySQL
         };
       }
       
@@ -51,16 +50,16 @@ class CountryController {
         whereClause.currency_code = currency.toUpperCase();
       }
 
-      // Build order clause for sorting
+      // Build order clause for sorting - FIXED FOR MySQL
       let orderClause = [['name', 'ASC']]; // Default sort by name ascending
       
       if (sort) {
         switch (sort) {
           case 'gdp_desc':
-            orderClause = [['estimated_gdp', 'DESC NULLS LAST']];
+            orderClause = [['estimated_gdp', 'DESC']]; // ✅ FIXED: Removed NULLS LAST (PostgreSQL only)
             break;
           case 'gdp_asc':
-            orderClause = [['estimated_gdp', 'ASC NULLS LAST']];
+            orderClause = [['estimated_gdp', 'ASC']]; // ✅ FIXED: Removed NULLS LAST
             break;
           case 'population_desc':
             orderClause = [['population', 'DESC']];
@@ -105,7 +104,7 @@ class CountryController {
       const country = await Country.findOne({
         where: {
           name: {
-            [Op.iLike]: name // Case-insensitive search
+            [Op.like]: name // ✅ FIXED: Changed iLike to like for MySQL
           }
         }
       });
@@ -135,7 +134,7 @@ class CountryController {
       const country = await Country.findOne({
         where: {
           name: {
-            [Op.iLike]: name
+            [Op.like]: name // ✅ FIXED: Changed iLike to like for MySQL
           }
         }
       });
