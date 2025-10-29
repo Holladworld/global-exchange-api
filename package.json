@@ -9,7 +9,9 @@
     "test:server": "node -e \"require('dotenv').config(); const app = require('./server'); console.log('✅ Server module loads correctly')\"",
     "test:db": "node scripts/test-db.js",
     "test:model": "node scripts/test-model.js",
-    "test:apis": "node scripts/test-apis.js"
+    "test:apis": "node scripts/test-apis.js",
+    
+    "test:gdp": "node scripts/test-gdp-calculation.js"
   },
   "keywords": [],
   "author": "",
