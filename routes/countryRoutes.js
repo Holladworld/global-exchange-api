@@ -10,4 +10,6 @@ router.get('/status', countryController.getCountryStatus);
 router.get('/:name', countryController.getCountryByName);
 router.delete('/:name', countryController.deleteCountry);
 
+router.get('/image', countryController.getSummaryImage);
+
 module.exports = router;

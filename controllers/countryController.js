@@ -1,6 +1,8 @@
 const dataProcessingService = require('../services/dataProcessingService');
 const Country = require('../models/country');
 const { Op } = require('sequelize');
+  const imageService = require('../services/imageService');
+  
 
 class CountryController {
   async refreshCountries(req, res) {
@@ -173,6 +175,31 @@ class CountryController {
       });
     } catch (error) {
       console.error('❌ Get status failed:', error.message);
+      res.status(500).json({
+        error: 'Internal server error',
+        details: error.message
+      });
+    }
+  }
+
+  async getSummaryImage(req, res) {
+    try {
+      const imagePath = await imageService.getImagePath();
+      
+      if (!imagePath) {
+        return res.status(404).json({
+          error: 'Summary image not found',
+          message: 'Please run /countries/refresh first to generate the image'
+        });
+      }
+
+      // Set appropriate headers for image response
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
+      
+      res.sendFile(imagePath);
+    } catch (error) {
+      console.error('❌ Get summary image failed:', error.message);
       res.status(500).json({
         error: 'Internal server error',
         details: error.message

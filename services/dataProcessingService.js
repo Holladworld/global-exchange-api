@@ -1,6 +1,7 @@
 const Country = require('../models/country');
 const countriesService = require('./countriesService');
 const exchangeService = require('./exchangeService');
+const imageService = require('./imageService');
 
 class DataProcessingService {
   calculateEstimatedGDP(population, exchangeRate) {
@@ -105,6 +106,15 @@ class DataProcessingService {
 
     console.log(`💾 Database update: ${savedCount} new, ${updatedCount} updated`);
     
+    // Step 5: Generate summary image after successful refresh
+    try {
+      await imageService.generateSummaryImage();
+      console.log('🖼️ Summary image generated successfully');
+    } catch (imageError) {
+      console.warn('⚠️ Failed to generate summary image:', imageError.message);
+      // Don't fail the entire refresh if image generation fails
+    }
+
     if (errors.length > 0) {
       console.warn(`⚠️ ${errors.length} errors occurred during processing`);
     }

@@ -79,7 +79,7 @@ app.get('/', (req, res) => {
 });
 
 // 404 handler for undefined routes
-app.use('*', (req, res) => {
+app.use((req, res) => {
   logger.warn(`404 - Endpoint not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({
     error: 'Endpoint not found',

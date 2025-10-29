@@ -11,7 +11,9 @@
     "test:model": "node scripts/test-model.js",
     "test:apis": "node scripts/test-apis.js",
     "test:architecture": "node scripts/test-architecture.js",
-    "test:gdp": "node scripts/test-gdp-calculation.js"
+    "test:gdp": "node scripts/test-gdp-calculation.js",
+    "test:image": "node scripts/test-image-generation.js"
+
   },
   "keywords": [],
   "author": "",
@@ -21,6 +23,7 @@
   },
   "dependencies": {
     "axios": "^1.13.1",
+    "canvas": "^3.2.0",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "joi": "^17.13.3",
