@@ -17,6 +17,7 @@
     "test:apis": "node scripts/test-apis.js",
     "test:architecture": "node scripts/test-architecture.js",
     "test:gdp": "node scripts/test-gdp-calculation.js",
+     "test:mysql": "node scripts/test-mysql.js",
     "test:image": "node scripts/test-image-generation.js"
   },
   "keywords": [],
@@ -36,8 +37,6 @@
     "joi": "^17.13.3",
     "morgan": "^1.10.1",
     "mysql2": "^3.15.3",
-    "pg": "^8.16.3",
-    "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.7",
     "winston": "^3.18.3"
   }
