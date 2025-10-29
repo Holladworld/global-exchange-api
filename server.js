@@ -1,14 +1,14 @@
+// Load environment variables (this should not show debug messages)
 require('dotenv').config();
+
 const express = require('express');
 const helmet = require('helmet');
 const compression = require('compression');
-const cors = require('cors')
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const { sequelize } = require('./models');
 const logger = require('./utils/logger');
 const morgan = require('morgan');
-
-// Install morgan for HTTP logging
-// npm install morgan
 
 // Import routes and middleware
 const countryRoutes = require('./routes/countryRoutes');
@@ -24,24 +24,36 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-//CORS configuration
+// CORS configuration
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:3000'],
   methods: ['GET', 'POST', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-
 // Performance middleware
 app.use(compression());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: process.env.NODE_ENV === 'production' ? 100 : 1000,
+  message: {
+    error: 'Too many requests, please try again later'
+  }
+});
+app.use(limiter);
 
 // Basic middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Production security middleware
 app.use(productionSecurity);
 
 // HTTP request logging
-app.use(morgan('combined', { stream: logger.stream }));
+const morganFormat = process.env.NODE_ENV === 'production' ? 'combined' : 'dev';
+app.use(morgan(morganFormat, { stream: logger.stream }));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -89,7 +101,8 @@ app.get('/', (req, res) => {
       'GET /countries': 'Get all countries (supports ?region, ?currency, ?sort)',
       'GET /countries/:name': 'Get specific country by name',
       'DELETE /countries/:name': 'Delete country by name',
-      'GET /countries/status': 'Get API status and statistics'
+      'GET /countries/status': 'Get API status and statistics',
+      'GET /countries/image': 'Get summary image'
     },
     query_parameters: {
       'region': 'Filter by region (e.g., Africa, Europe)',
@@ -109,22 +122,28 @@ app.use((req, res) => {
   });
 });
 
-// Error handling middleware (MUST be last)
-app.use(errorHandler);
+// Error handling middleware
+if (process.env.NODE_ENV === 'production') {
+  app.use(productionErrorHandler);
+} else {
+  app.use(errorHandler);
+}
 
 // Start server with database sync
 const startServer = async () => {
   try {
     await sequelize.authenticate();
-    logger.info('Database connection established successfully');
+    logger.info(` ${process.env.NODE_ENV || 'development'} database connection established`);
 
     if (process.env.NODE_ENV === 'development') {
       await sequelize.sync({ force: false });
-      logger.info('Database tables synchronized');
+      logger.info('Development database synchronized');
+    } else {
+      logger.info('Production database connected');
     }
 
     app.listen(PORT, () => {
-      logger.info(`Server running on port ${PORT}`);
+      logger.info(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
       logger.info(`Health check: http://localhost:${PORT}/health`);
       logger.info(`API Base: http://localhost:${PORT}/countries`);
     });

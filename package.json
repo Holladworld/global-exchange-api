@@ -7,13 +7,21 @@
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
-    "scripts": {
+  "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
     "start:prod": "node scripts/start-production.js",
     "build": "npm install",
+    "setup:mysql": "node scripts/setup-mysql.js",
     "setup:db": "node scripts/setup-db.js",
     "test": "jest",
+    "test:production": "NODE_ENV=production node scripts/test-all-production.js",
+    "test:endpoints": "node scripts/test-endpoints-simple.js",
+    "test:db-ops": "node scripts/test-db-operations.js",
+    "test:final": "NODE_ENV=production node scripts/final-check.js",
+    "test:all": "npm run test:production && npm run test:db-ops && npm run test:final",
+
+    "test:endpoints": "node scripts/test-endpoints-simple.js",
     "test:unit": "jest tests/unit.test.js",
     "test:integration": "jest tests/integration.test.js",
     "test:coverage": "jest --coverage",
@@ -27,7 +35,6 @@
     "test:production": "NODE_ENV=production node scripts/test-production.js",
     "test:image": "node scripts/test-image-generation.js"
   },
-  
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -41,6 +48,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.2.0",
     "helmet": "^8.1.0",
     "joi": "^17.13.3",
     "morgan": "^1.10.1",
