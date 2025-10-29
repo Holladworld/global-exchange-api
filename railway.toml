@@ -5,8 +5,7 @@ builder = "nixpacks"
 startCommand = "npm start"
 restartPolicyType = "ON_FAILURE"
 
-# Health check configuration
+# Health check configuration - REMOVE PORT, Railway sets it automatically
 [healthcheck]
 path = "/health"
-port = 3010
 timeout = 30
