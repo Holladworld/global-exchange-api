@@ -1,14 +1,13 @@
 const { Sequelize } = require('sequelize');
 const logger = require('../utils/logger');
 
-// Import environment-specific configs
+// Import environment configs
 const developmentConfig = require('./development');
 const productionConfig = require('./production');
 
-// Choose config based on environment
 const envConfig = process.env.NODE_ENV === 'production' ? productionConfig : developmentConfig;
 
-// Create MySQL Sequelize instance with environment-specific settings
+// Create MySQL Sequelize instance
 const sequelize = new Sequelize(
   process.env.DB_NAME || 'global_exchange_db',
   process.env.DB_USER || 'root', 
@@ -19,28 +18,29 @@ const sequelize = new Sequelize(
     dialect: 'mysql',
     logging: envConfig.database.logging,
     pool: envConfig.database.pool,
-    retry: {
-      max: 3,
+    dialectOptions: {
+      // MySQL specific options
+      decimalNumbers: true, // Return numbers as numbers, not strings
     },
   }
 );
 
-// Production-ready connection test
+// Test database connection
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
-    logger.info(`✅ MySQL ${process.env.NODE_ENV || 'development'} connection established successfully`);
+    logger.info(`✅ MySQL ${process.env.NODE_ENV || 'development'} connection established`);
     return true;
   } catch (error) {
     logger.error('❌ Unable to connect to MySQL database:', error.message);
     
-    // Provide helpful error messages based on common issues
+    // Helpful error messages
     if (error.original?.code === 'ECONNREFUSED') {
-      logger.error('💡 MySQL service might not be running. Start it with: sudo systemctl start mysql');
+      logger.error('💡 MySQL service might not be running. Start with: sudo systemctl start mysql');
     } else if (error.original?.code === 'ER_ACCESS_DENIED_ERROR') {
-      logger.error('💡 Check your DB_USER and DB_PASSWORD in .env file');
+      logger.error('💡 Check DB_USER and DB_PASSWORD in .env');
     } else if (error.original?.code === 'ER_BAD_DB_ERROR') {
-      logger.error('💡 Database does not exist. Create it with: CREATE DATABASE global_exchange_db;');
+      logger.error('💡 Create database: CREATE DATABASE global_exchange_db;');
     }
     
     return false;
