@@ -38,7 +38,8 @@ if (env === 'production') {
 }
 
 // Use DATABASE_URL from environment (Railway provides this)
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL || process.env.MYSQL_URL;
+
 
 if (!databaseUrl) {
   throw new Error('DATABASE_URL is not set in the environment');
