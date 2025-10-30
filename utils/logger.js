@@ -1,16 +1,23 @@
-// Simple production logger - no file dependencies
-const logger = {
-  info: (message) => console.log(`[INFO] ${new Date().toISOString()} - ${message}`),
-  error: (message) => console.error(`[ERROR] ${new Date().toISOString()} - ${message}`),
-  warn: (message) => console.warn(`[WARN] ${new Date().toISOString()} - ${message}`),
-  debug: (message) => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[DEBUG] ${new Date().toISOString()} - ${message}`);
-    }
-  }
-};
+const winston = require('winston');
 
-// Simple stream for Morgan
+const logger = winston.createLogger({
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  defaultMeta: { service: 'global-exchange-api' },
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      ),
+    }),
+  ],
+});
+
 logger.stream = {
   write: (message) => {
     logger.info(message.trim());
