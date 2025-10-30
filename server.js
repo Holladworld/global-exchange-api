@@ -1,59 +1,54 @@
-// In your startServer function, replace the database connection part:
+require('dotenv').config();
+const express = require('express');
+const helmet = require('helmet');
+const compression = require('compression');
+const cors = require('cors');
+const { sequelize } = require('./models');
+
+// Import routes
+const countryRoutes = require('./routes/countryRoutes');
+
+const app = express();
+const PORT = process.env.PORT || 3010;
+
+// Essential middleware only
+app.use(helmet());
+app.use(compression());
+app.use(cors());
+app.use(express.json());
+
+// Health check (essential for Railway)
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// API routes
+app.use('/countries', countryRoutes);
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'GlobalExchangeAPI', 
+    version: '1.0.0',
+    docs: 'https://github.com/yourusername/global-exchange-api'
+  });
+});
+
+// Start server - CRITICAL FOR RAILWAY
 const startServer = async () => {
   try {
-    console.log('🚀 Starting server...');
-    console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🔧 Port: ${PORT}`);
-
-    // Check if MySQL environment variables exist
-    const hasDbConfig = process.env.MYSQLHOST && process.env.MYSQLDATABASE;
+    await sequelize.authenticate();
+    console.log('✅ Database connected');
     
-    if (hasDbConfig) {
-      // Test database connection with retry logic
-      let dbConnected = false;
-      let retryCount = 0;
-      const maxRetries = 3;
-      
-      while (!dbConnected && retryCount < maxRetries) {
-        try {
-          await sequelize.authenticate();
-          console.log('✅ Database connected successfully');
-          dbConnected = true;
-          
-          // Sync database
-          console.log('🔄 Syncing database models...');
-          await sequelize.sync({ alter: true });
-          console.log('✅ Database models synchronized');
-        } catch (dbError) {
-          retryCount++;
-          console.log(`⚠️ Database connection attempt ${retryCount} failed: ${dbError.message}`);
-          if (retryCount < maxRetries) {
-            console.log(`🔄 Retrying in 5 seconds...`);
-            await new Promise(resolve => setTimeout(resolve, 5000));
-          } else {
-            console.log('❌ Max database connection retries reached');
-            console.log('💡 Please check your Railway MySQL service');
-          }
-        }
-      }
-    } else {
-      console.log('⚠️ No database configuration found');
-      console.log('💡 Add MySQL service in Railway dashboard');
-    }
-
+    await sequelize.sync(); // Create tables if needed
+    
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-      if (hasDbConfig) {
-        console.log('✅ Database: Configured (check connection status above)');
-      } else {
-        console.log('⚠️ Database: Not configured - add MySQL service in Railway');
-      }
-      console.log(`📊 Health check: http://localhost:${PORT}/health`);
+      console.log(`🚀 Production server running on port ${PORT}`);
     });
-    
   } catch (error) {
-    console.error('❌ Startup failed:', error.message);
+    console.error('❌ Server startup failed:', error);
     process.exit(1);
   }
 };
+
+startServer();

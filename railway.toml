@@ -3,9 +3,3 @@ builder = "nixpacks"
 
 [deploy]
 startCommand = "npm start"
-
-[healthcheck]
-path = "/health"
-port = 8080
-timeout = 10
-interval = 30

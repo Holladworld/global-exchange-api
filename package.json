@@ -1,55 +1,28 @@
 {
   "name": "global-exchange-api",
   "version": "1.0.0",
-  "description": "**README.md (Starter Template - Project Beginning)**",
-  "main": "index.js",
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
-  },
+  "description": "GlobalExchangeAPI - Currency & Country Data API",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "build": "npm install --omit=dev",
-  
-    "setup:db": "node scripts/setup-db.js",
-    "test": "jest",
-    "test:production": "NODE_ENV=production node scripts/test-all-production.js",
-    "test:endpoints": "node scripts/test-endpoints-simple.js",
-    "test:db-ops": "node scripts/test-db-operations.js",
-    "test:final": "NODE_ENV=production node scripts/final-check.js",
-    "test:all": "npm run test:production && npm run test:db-ops && npm run test:final",
-    "test:unit": "jest tests/unit.test.js",
-    "test:integration": "jest tests/integration.test.js",
-    "test:coverage": "jest --coverage",
-    "test:server": "node -e \"require('dotenv').config(); const app = require('./server'); console.log('✅ Server module loads correctly')\"",
-    "test:db": "node scripts/test-db.js",
-    "test:model": "node scripts/test-model.js",
-    "test:apis": "node scripts/test-apis.js",
-    "test:architecture": "node scripts/test-architecture.js",
-    "test:gdp": "node scripts/test-gdp-calculation.js",
-    "test:mysql": "node scripts/test-mysql.js",
-    "test:image": "node scripts/test-image-generation.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "nodemon": "^3.1.10"
+    "build": "npm install"
   },
   "dependencies": {
-    "axios": "^1.13.1",
-    "canvas": "^3.2.0",
-    "compression": "^1.8.1",
+    "express": "^4.18.2",
+    "mysql2": "^3.6.0",
+    "sequelize": "^6.32.1",
+    "dotenv": "^16.3.1",
+    "axios": "^1.5.0",
+    "canvas": "^2.11.2",
+    "joi": "^17.9.2",
+    "helmet": "^7.0.0",
+    "compression": "^1.7.4",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "express-rate-limit": "^8.2.0",
-    "helmet": "^8.1.0",
-    "joi": "^17.13.3",
-    "morgan": "^1.10.1",
-    "mysql2": "^3.15.3",
-    "sequelize": "^6.37.7",
-    "winston": "^3.18.3"
+    "express-rate-limit": "^6.10.0",
+    "morgan": "^1.10.0",
+    "winston": "^3.10.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
