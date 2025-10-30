@@ -1,4 +1,8 @@
-require('dotenv').config();
+// Only load dotenv in development
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
 const express = require('express');
 const helmet = require('helmet');
 const compression = require('compression');
@@ -30,25 +34,50 @@ app.get('/', (req, res) => {
   res.json({ 
     message: 'GlobalExchangeAPI', 
     version: '1.0.0',
-    docs: 'https://github.com/yourusername/global-exchange-api'
+    endpoints: [
+      'GET /health',
+      'POST /countries/refresh', 
+      'GET /countries',
+      'GET /countries/:name',
+      'DELETE /countries/:name',
+      'GET /countries/status',
+      'GET /countries/image'
+    ]
   });
 });
+
+// Handle missing cache directory for images
+const fs = require('fs');
+const cacheDir = './cache';
+if (!fs.existsSync(cacheDir)) {
+  fs.mkdirSync(cacheDir, { recursive: true });
+}
 
 // Start server - CRITICAL FOR RAILWAY
 const startServer = async () => {
   try {
+    console.log('🚀 Starting GlobalExchangeAPI...');
+    console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔌 Port: ${PORT}`);
+    
+    // Database connection
     await sequelize.authenticate();
     console.log('✅ Database connected');
     
-    await sequelize.sync(); // Create tables if needed
+    // Sync database (create tables if needed)
+    await sequelize.sync();
+    console.log('✅ Database synchronized');
     
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Production server running on port ${PORT}`);
+      console.log(`🎯 Server running on port ${PORT}`);
+      console.log(`📍 Health: http://localhost:${PORT}/health`);
     });
   } catch (error) {
-    console.error('❌ Server startup failed:', error);
+    console.error('❌ Startup failed:', error.message);
     process.exit(1);
   }
 };
 
 startServer();
+
+module.exports = app;

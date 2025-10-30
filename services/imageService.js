@@ -1,22 +1,25 @@
 const { createCanvas } = require('canvas');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 const Country = require('../models/country');
 const logger = require('../utils/logger');
 
 class ImageService {
   constructor() {
-    this.imagePath = path.join(__dirname, '../cache/summary.png');
-    this.cacheDir = path.dirname(this.imagePath);
+    this.cacheDir = path.join(__dirname, '../cache');
+    this.imagePath = path.join(this.cacheDir, 'summary.png');
+    
+    // Ensure cache directory exists synchronously
+    if (!fsSync.existsSync(this.cacheDir)) {
+      fsSync.mkdirSync(this.cacheDir, { recursive: true });
+    }
   }
 
   async generateSummaryImage() {
     try {
       logger.info('🖼️ Generating summary image...');
       
-      // Ensure cache directory exists
-      await fs.mkdir(this.cacheDir, { recursive: true });
-
       // Get data for the image
       const totalCountries = await Country.count();
       const topCountries = await Country.findAll({
@@ -123,37 +126,6 @@ class ImageService {
       return this.imagePath;
     } catch (error) {
       return null;
-    }
-  }
-
-  // Test method to verify image generation works
-  async testImageGeneration() {
-    try {
-      logger.info('🧪 Testing image generation...');
-      
-      // Create a simple test image
-      const canvas = createCanvas(400, 200);
-      const ctx = canvas.getContext('2d');
-      
-      // Simple test image
-      ctx.fillStyle = '#3b82f6';
-      ctx.fillRect(0, 0, 400, 200);
-      
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '20px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('✅ Image Generation Test', 200, 100);
-      ctx.fillText('GlobalExchangeAPI', 200, 130);
-      
-      const testPath = path.join(this.cacheDir, 'test.png');
-      const buffer = canvas.toBuffer('image/png');
-      await fs.writeFile(testPath, buffer);
-      
-      logger.info('✅ Image generation test passed');
-      return testPath;
-    } catch (error) {
-      logger.error('❌ Image generation test failed:', error);
-      throw error;
     }
   }
 }
